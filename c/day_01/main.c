@@ -51,5 +51,7 @@ int main(void) {
 	rewind(fptr);
 	printf("Part 2: %ld\n", part_2(fptr));
 
+	fclose(fptr);
+
 	return 0;
 }
