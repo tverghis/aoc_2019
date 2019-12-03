@@ -5,6 +5,7 @@
 #define OPCODE_ADD 1
 #define OPCODE_MULT 2
 #define OPCODE_HALT 99
+#define GRAV_ASSIST_OUTPUT 19690720
 
 unsigned long num_instrs(char *input) {
 	size_t i;
@@ -49,6 +50,28 @@ unsigned long part_1(unsigned long *instr_arr, size_t instr_arr_len, size_t inst
 	return temp_instr_arr[0];
 }
 
+unsigned long part_2(unsigned long *instr_arr, size_t instr_arr_len, size_t instr_arr_size) {
+	unsigned int noun, verb;
+	
+	for (noun = 0; noun <= 99; ++ noun) {
+		for (verb = 0; verb <= 99; ++ verb) {
+			unsigned long temp_instr_arr [instr_arr_size];
+			memcpy(temp_instr_arr, instr_arr, instr_arr_size);
+
+			temp_instr_arr[1] = noun;
+			temp_instr_arr[2] = verb;
+
+			run_instructions(temp_instr_arr, instr_arr_size);
+
+			if (GRAV_ASSIST_OUTPUT == temp_instr_arr[0]) {
+				return 100 * noun + verb;
+			}
+		}
+	}
+
+	exit(-1);
+}
+
 int main(void) {
 	FILE *fptr;
 
@@ -77,7 +100,8 @@ int main(void) {
 		++ instr_count;
 	}
 
-	printf("Part 1: %lu", part_1(instr_arr, instr_count, sizeof(instr_arr)));
+	printf("Part 1: %lu\n", part_1(instr_arr, instr_count, sizeof(instr_arr)));
+	printf("Part 2: %lu\n", part_2(instr_arr, instr_count, sizeof(instr_arr)));
 
 	return 0;
 }
