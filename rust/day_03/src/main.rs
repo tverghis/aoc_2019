@@ -15,6 +15,10 @@ impl Point {
     fn manhattan_distance(lhs: Point, rhs: Point) -> i32 {
         (lhs.x - rhs.x).abs() + (lhs.y - rhs.y).abs()
     }
+
+    fn distance_from_origin(&self) -> i32 {
+        Point::manhattan_distance(*self, Point::new(0, 0))
+    }
 }
 
 #[allow(clippy::suspicious_arithmetic_impl)] // Clippy doesn't like subtraction in an `Add` impl, but it's ok here
@@ -29,6 +33,14 @@ impl ops::Add<Direction> for Point {
             Direction::Left(m) => Point::new(self.x - m, self.y),
         }
     }
+}
+
+/// Lines can only be vertical or horizontal, since the direction of movement is always at
+/// 90-degree angles.
+#[derive(Debug, PartialEq)]
+enum LineOrientation {
+    Vertical,
+    Horizontal,
 }
 
 #[derive(Debug, PartialEq)]
@@ -47,7 +59,27 @@ impl Line {
     }
 
     fn are_parallel(lhs: &Line, rhs: &Line) -> bool {
-        (lhs.slope() - rhs.slope()).abs() < std::f32::EPSILON // Clippy doesn't like exact float cmp
+        lhs.orientation() == rhs.orientation()
+    }
+
+    fn orientation(&self) -> LineOrientation {
+        if self.slope().is_infinite() {
+            return LineOrientation::Vertical;
+        }
+
+        return LineOrientation::Horizontal;
+    }
+
+    fn contains_point(&self, p: Point) -> bool {
+        let min_x = std::cmp::min(self.p1.x, self.p2.x);
+        let min_y = std::cmp::min(self.p1.y, self.p2.y);
+        let max_x = std::cmp::max(self.p1.x, self.p2.x);
+        let max_y = std::cmp::max(self.p1.y, self.p2.y);
+
+        match self.orientation() {
+            LineOrientation::Horizontal => (min_x <= p.x) && (p.x <= max_x),
+            LineOrientation::Vertical => (min_y <= p.y) && (p.y <= max_y),
+        }
     }
 
     fn intersection_point(lhs: &Line, rhs: &Line) -> Option<Point> {
@@ -55,7 +87,19 @@ impl Line {
             return None;
         }
 
-        unimplemented!();
+        // One line is vertical, and the other is horizontal.
+        // The point of intersection is at `(x_vert, y_horiz)`.
+        let int_point = match lhs.orientation() {
+            LineOrientation::Vertical => Point::new(lhs.p1.x, rhs.p1.y),
+            LineOrientation::Horizontal => Point::new(rhs.p1.x, lhs.p1.y),
+        };
+
+        // However, we need to check that the point actually lies on the segments.
+        if !lhs.contains_point(int_point) || !rhs.contains_point(int_point) {
+            return None;
+        }
+
+        Some(int_point)
     }
 }
 
@@ -90,11 +134,14 @@ struct Wire {
 impl Wire {
     fn intersection_points(&self, other: &Wire) -> Vec<Point> {
         let mut int_points = Vec::new();
+        let origin = Point::new(0, 0);
 
         for l1 in &self.segments {
             for l2 in &other.segments {
                 if let Some(int_pt) = Line::intersection_point(l1, l2) {
-                    int_points.push(int_pt);
+                    if int_pt != origin {
+                        int_points.push(int_pt);
+                    }
                 }
             }
         }
@@ -129,13 +176,16 @@ fn main() {
     let wires: Vec<Wire> = input.lines().map(Wire::from).collect();
     assert_eq!(wires.len(), 2);
 
-    let intersection_distances: Vec<i32> = wires[0]
+    println!("Part 1: {}", part_1(&wires));
+}
+
+fn part_1(wires: &[Wire]) -> i32 {
+    wires[0]
         .intersection_points(&wires[1])
         .iter()
-        .map(|&p| Point::manhattan_distance(p, Point::new(0, 0)))
-        .collect();
-
-    dbg!(intersection_distances);
+        .map(|p| p.distance_from_origin())
+        .min()
+        .unwrap()
 }
 
 #[cfg(test)]
@@ -193,5 +243,34 @@ mod test {
                 ]
             }
         );
+    }
+
+    #[test]
+    fn intersection_point() {
+        let l1 = Line::new(Point::new(1, 5), Point::new(10, 5));
+        let l2 = Line::new(Point::new(5, 1), Point::new(5, 10));
+
+        assert_eq!(Line::intersection_point(&l1, &l2), Some(Point::new(5, 5)));
+    }
+
+    #[test]
+    fn intersection_parallel() {
+        let l1 = Line::new(Point::new(0, 0), Point::new(0, 10));
+        let l2 = Line::new(Point::new(5, 0), Point::new(5, 10));
+
+        assert_eq!(Line::intersection_point(&l1, &l2), None);
+    }
+
+    #[test]
+    fn sample_tests() {
+        let wire_1 = Wire::from("R8,U5,L5,D3");
+        let wire_2 = Wire::from("U7,R6,D4,L4");
+
+        assert_eq!(wire_1.segments.len(), 4);
+        assert_eq!(wire_2.segments.len(), 4);
+
+        let wires = vec![wire_1, wire_2];
+
+        assert_eq!(part_1(&wires), 6);
     }
 }
