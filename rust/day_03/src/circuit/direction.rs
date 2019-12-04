@@ -23,6 +23,8 @@ impl From<&str> for Direction {
 
 #[cfg(test)]
 mod test {
+    use super::*;
+
     #[test]
     fn direction_from() {
         assert_eq!(Direction::from("U12"), Direction::Up(12));

@@ -1,4 +1,5 @@
-use crate::wire::Direction;
+use crate::circuit::Direction;
+use std::convert::TryInto;
 use std::ops;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -12,12 +13,14 @@ impl Point {
         Point { x, y }
     }
 
-    fn manhattan_distance(lhs: Point, rhs: Point) -> i32 {
-        (lhs.x - rhs.x).abs() + (lhs.y - rhs.y).abs()
+    pub fn manhattan_distance(lhs: Point, rhs: Point) -> u32 {
+        ((lhs.x - rhs.x).abs() + (lhs.y - rhs.y).abs())
+            .try_into()
+            .unwrap()
     }
 
-    pub fn distance_from_origin(&self) -> i32 {
-        Point::manhattan_distance(*self, Point::new(0, 0))
+    pub fn distance_from_origin(self) -> u32 {
+        Point::manhattan_distance(self, Point::new(0, 0))
     }
 }
 
@@ -37,6 +40,8 @@ impl ops::Add<Direction> for Point {
 
 #[cfg(test)]
 mod test {
+    use super::*;
+
     #[test]
     fn point_add() {
         let origin = Point::new(0, 0);

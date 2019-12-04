@@ -1,4 +1,4 @@
-use crate::wire::Point;
+use crate::circuit::Point;
 
 /// Lines can only be vertical or horizontal, since the direction of movement is always at
 /// 90-degree angles.
@@ -10,7 +10,7 @@ enum LineOrientation {
 
 #[derive(Debug, PartialEq)]
 pub struct Line {
-    pub p1: Point,
+    p1: Point,
     p2: Point,
 }
 
@@ -32,18 +32,18 @@ impl Line {
             return LineOrientation::Vertical;
         }
 
-        return LineOrientation::Horizontal;
+        LineOrientation::Horizontal
     }
 
-    fn contains_point(&self, p: Point) -> bool {
+    pub fn contains_point(&self, p: Point) -> bool {
         let min_x = std::cmp::min(self.p1.x, self.p2.x);
         let min_y = std::cmp::min(self.p1.y, self.p2.y);
         let max_x = std::cmp::max(self.p1.x, self.p2.x);
         let max_y = std::cmp::max(self.p1.y, self.p2.y);
 
         match self.orientation() {
-            LineOrientation::Horizontal => (min_x <= p.x) && (p.x <= max_x),
-            LineOrientation::Vertical => (min_y <= p.y) && (p.y <= max_y),
+            LineOrientation::Horizontal => (min_x <= p.x) && (p.x <= max_x) && (p.y == self.p1.y),
+            LineOrientation::Vertical => (min_y <= p.y) && (p.y <= max_y) && (p.x == self.p1.x),
         }
     }
 
@@ -66,10 +66,21 @@ impl Line {
 
         Some(int_point)
     }
+
+    pub fn length(&self) -> u32 {
+        Point::manhattan_distance(self.p1, self.p2)
+    }
+
+    // Unchecked - assumes that the line does contain the point.
+    pub fn distance_to_point(&self, point: Point) -> u32 {
+        Point::manhattan_distance(self.p1, point)
+    }
 }
 
 #[cfg(test)]
 mod test {
+    use super::*;
+
     #[test]
     fn intersection_point() {
         let l1 = Line::new(Point::new(1, 5), Point::new(10, 5));

@@ -1,6 +1,6 @@
-use crate::wire::Direction;
-use crate::wire::Line;
-use crate::wire::Point;
+use crate::circuit::Direction;
+use crate::circuit::Line;
+use crate::circuit::Point;
 
 #[derive(Debug, PartialEq)]
 pub struct Wire {
@@ -22,7 +22,22 @@ impl Wire {
             }
         }
 
-        return int_points;
+        int_points
+    }
+
+    pub fn distance_to_point(&self, point: Point) -> u32 {
+        let mut distance_traveled = 0;
+
+        for line in &self.segments {
+            if line.contains_point(point) {
+                distance_traveled += line.distance_to_point(point);
+                break;
+            }
+
+            distance_traveled += line.length();
+        }
+
+        distance_traveled
     }
 }
 
@@ -48,6 +63,8 @@ impl From<&str> for Wire {
 
 #[cfg(test)]
 mod test {
+    use super::*;
+
     #[test]
     fn wire_from() {
         let input = "R10,D3,L10,U3";
