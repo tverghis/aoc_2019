@@ -1,40 +1,68 @@
+#[derive(Debug, PartialEq)]
 pub(crate) struct Instruction {
     opcode: OpCode,
-    parameters: Vec<Parameter>,
+    parameters: Option<Vec<Parameter>>,
 }
 
 impl Instruction {
-    pub(crate) fn new(opcode: OpCode, parameters: Vec<Parameter>) -> Self {
+    pub(crate) fn new(opcode: OpCode, parameters: Option<Vec<Parameter>>) -> Self {
         Instruction { opcode, parameters }
+    }
+
+    pub(crate) fn length(&self) -> usize {
+        match self.opcode {
+            OpCode::Add | OpCode::Multiply => 4,
+            OpCode::Input | OpCode::Output => 2,
+            OpCode::Halt => 1,
+        }
     }
 }
 
+#[derive(Debug, PartialEq)]
 pub(crate) enum OpCode {
-    Add(u32),
-    Multiply(u32),
-    Input(u32),
-    Output(u32),
-    Halt(u32),
+    Add,
+    Multiply,
+    Input,
+    Output,
+    Halt,
 }
 
 impl From<u32> for OpCode {
     fn from(n: u32) -> Self {
         match n {
-            1 => OpCode::Add(4),
-            2 => OpCode::Multiply(4),
-            3 => OpCode::Input(2),
-            4 => OpCode::Output(2),
-            99 => OpCode::Halt(1),
+            1 => OpCode::Add,
+            2 => OpCode::Multiply,
+            3 => OpCode::Input,
+            4 => OpCode::Output,
+            99 => OpCode::Halt,
             _ => panic!("Unknown OpCode: {}", n),
         }
     }
 }
 
+impl OpCode {
+    pub(crate) fn num_params(&self) -> usize {
+        match self {
+            OpCode::Add | OpCode::Multiply => 3,
+            OpCode::Input | OpCode::Output => 1,
+            OpCode::Halt => 0,
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub(crate) struct Parameter {
     value: i32,
     mode: ParameterMode,
 }
 
+impl Parameter {
+    pub(crate) fn new(value: i32, mode: ParameterMode) -> Self {
+        Parameter { value, mode }
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub(crate) enum ParameterMode {
     Position,
     Immediate,
