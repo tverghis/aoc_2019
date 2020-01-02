@@ -1,9 +1,25 @@
+#[derive(Debug)]
+pub(crate) struct Instruction {
+    pub(crate) opcode: OpCode,
+    pub(crate) parameters: Vec<Parameter>,
+}
+
+impl Instruction {
+    pub(crate) fn new(opcode: OpCode, parameters: Vec<Parameter>) -> Self {
+        Instruction { opcode, parameters }
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub(crate) enum OpCode {
     Add,
     Multiply,
     Input,
     Output,
+    JumpIfTrue,
+    JumpIfFalse,
+    LessThan,
+    Equals,
     Halt,
 }
 
@@ -14,6 +30,10 @@ impl From<i32> for OpCode {
             2 => OpCode::Multiply,
             3 => OpCode::Input,
             4 => OpCode::Output,
+            5 => OpCode::JumpIfTrue,
+            6 => OpCode::JumpIfFalse,
+            7 => OpCode::LessThan,
+            8 => OpCode::Equals,
             99 => OpCode::Halt,
             _ => panic!("Unknown OpCode: {}", n),
         }
@@ -23,8 +43,9 @@ impl From<i32> for OpCode {
 impl OpCode {
     pub(crate) fn num_params(&self) -> usize {
         match self {
-            OpCode::Add | OpCode::Multiply => 3,
+            OpCode::Add | OpCode::Multiply | OpCode::LessThan | OpCode::Equals => 3,
             OpCode::Input | OpCode::Output => 1,
+            OpCode::JumpIfTrue | OpCode::JumpIfFalse => 2,
             OpCode::Halt => 0,
         }
     }
