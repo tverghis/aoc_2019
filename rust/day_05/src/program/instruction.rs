@@ -1,24 +1,4 @@
 #[derive(Debug, PartialEq)]
-pub(crate) struct Instruction {
-    opcode: OpCode,
-    parameters: Option<Vec<Parameter>>,
-}
-
-impl Instruction {
-    pub(crate) fn new(opcode: OpCode, parameters: Option<Vec<Parameter>>) -> Self {
-        Instruction { opcode, parameters }
-    }
-
-    pub(crate) fn length(&self) -> usize {
-        match self.opcode {
-            OpCode::Add | OpCode::Multiply => 4,
-            OpCode::Input | OpCode::Output => 2,
-            OpCode::Halt => 1,
-        }
-    }
-}
-
-#[derive(Debug, PartialEq)]
 pub(crate) enum OpCode {
     Add,
     Multiply,
@@ -27,8 +7,8 @@ pub(crate) enum OpCode {
     Halt,
 }
 
-impl From<u32> for OpCode {
-    fn from(n: u32) -> Self {
+impl From<i32> for OpCode {
+    fn from(n: i32) -> Self {
         match n {
             1 => OpCode::Add,
             2 => OpCode::Multiply,
@@ -48,12 +28,16 @@ impl OpCode {
             OpCode::Halt => 0,
         }
     }
+
+    pub(crate) fn instr_len(&self) -> usize {
+        self.num_params() + 1
+    }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) struct Parameter {
-    value: i32,
-    mode: ParameterMode,
+    pub(crate) value: i32,
+    pub(crate) mode: ParameterMode,
 }
 
 impl Parameter {
@@ -62,14 +46,14 @@ impl Parameter {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub(crate) enum ParameterMode {
     Position,
     Immediate,
 }
 
-impl From<u32> for ParameterMode {
-    fn from(n: u32) -> Self {
+impl From<i32> for ParameterMode {
+    fn from(n: i32) -> Self {
         match n {
             0 => ParameterMode::Position,
             1 => ParameterMode::Immediate,
